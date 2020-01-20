@@ -53,10 +53,10 @@
         (label-cnt ($ "a") (pt -0.5 8))
         (label-cnt ($ "b") (pt -0.5 5))
 
-        (dot-node 6 8 "black")
-        (dot-node 7.5 4.25 "black")
-        (dot-node 0 5 "white")
-        (dot-node 0 8 "white"))))
+        (dot-node (pt 6 8) "black")
+        (dot-node (pt 7.5 4.25) "black")
+        (dot-node (pt 0 5) "white")
+        (dot-node (pt 0 8) "white"))))
 
 cmos-nor
 

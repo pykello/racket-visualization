@@ -30,8 +30,8 @@ latex
   (syntax-rules ()
     [(dashed-curve a ...) (dashed (draw (curve a ...)))]))
 
-(define (dot-node x y fill)
-  (circle-node #:at (pt x y) #:min-size (px 4) #:fill fill))
+(define (dot-node pos fill)
+  (circle-node #:at pos #:min-size (px 4) #:fill fill))
 
 (define (save-svg filename p)
   (when (file-exists? filename)
