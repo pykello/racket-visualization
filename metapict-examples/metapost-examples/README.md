@@ -13,5 +13,9 @@ You can find implementations of some other metapost examples at https://github.c
 
 ![Figure 132](fig132.svg)
 
+### Figure 133
+
+![Figure 133](fig133.svg)
+
 
 
