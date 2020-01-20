@@ -32,3 +32,8 @@ latex
 
 (define (dot-node x y fill)
   (circle-node #:at (pt x y) #:min-size (px 4) #:fill fill))
+
+(define (save-svg filename p)
+  (when (file-exists? filename)
+    (delete-file filename))
+  (save-pict filename p 'svg))

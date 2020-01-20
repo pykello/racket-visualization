@@ -60,5 +60,5 @@
 
 cmos-nor
 
-(save-pict cmos-nor "cmos-nor.svg" 'svg)
+(save-svg "cmos-nor.svg" cmos-nor)
 
