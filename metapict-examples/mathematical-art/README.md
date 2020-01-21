@@ -11,7 +11,7 @@ Source code: [bird-1.rkt](bird-1.rkt)
 
 Source code: [olive-branch.rkt](olive-branch.rkt)
 
-<img src="olive-branch.svg" alt="Olive Branch" width="500" />
+<img src="olive-branch.svg" alt="Olive Branch" width="700" />
 
 
 
