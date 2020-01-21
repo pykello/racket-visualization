@@ -32,9 +32,8 @@
 (define olive-branch
   (with-window (window -0.5 3 -0.5 1)
     (color "DarkOliveGreen"
-           (draw 
-            (for/draw ([k (in-range 1 4001 1)])
-              (circle (pt (A k) (B k)) (R k)))))))
+           (for/draw ([k (in-range 1 4001 1)])
+             (circle (pt (A k) (B k)) (R k))))))
 
 olive-branch
 
