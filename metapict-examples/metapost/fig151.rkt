@@ -7,7 +7,7 @@
 (set-curve-pict-size 450 450)
 
 (define (disc-at d r)
-  (let ([P (pt* 2 (pt (+ (sind (* 2 d)) (cos d)) (cosd (* 3 d))))])
+  (let ([P (pt* 2 (pt (sind (* 2 d)) (cosd (* 3 d))))])
         (circle P r)))
 
 (define fig151
