@@ -4,7 +4,7 @@
          racket/math
          "../common.rkt")
 
-(set-curve-pict-size 480 200)
+(set-curve-pict-size 1920 800)
 
 ;; formula based on https://en.wikipedia.org/wiki/A_Bird_in_Flight
 
@@ -17,7 +17,7 @@
            (pt (* 0.2 (sin (+ (* 6 pi i 0.002) (/ pi 5))))
                (* (- (/ 2 3)) (expt (sin (- (* 2 pi i 0.002) (/ pi 3))) 2)))))))
 
-bird-1
+(scale 0.2 bird-1)
 
 (save-svg "bird-1.svg" bird-1)
 

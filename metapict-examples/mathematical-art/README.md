@@ -5,7 +5,7 @@ Mathematical Art
 
 Source code: [bird-1.rkt](bird-1.rkt)
 
-![Bird 1](bird-1.svg)
+<img src="bird-1.svg" alt="Bird 1" width="800" />
 
 ### Bird 2
 
