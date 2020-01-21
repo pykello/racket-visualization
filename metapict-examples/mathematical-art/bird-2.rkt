@@ -4,20 +4,20 @@
          racket/math
          "../common.rkt")
 
-(set-curve-pict-size 480 200)
+(set-curve-pict-size 1800 600)
 
-;; formula based on https://en.wikipedia.org/wiki/A_Bird_in_Flight
+;; http://www.ams.org/publicoutreach/math-imagery/yeganeh
 
-(define bird-1
-  (with-window (window -1.5 1.5 -0.75 0.5)
-  (for/draw ([i (in-range 1 501)])
-    (curve (pt (* 1.5 (expt (sin (+ (/ pi 3) (* 2 pi i 0.002))) 7))
-               (* 0.25 (expt (cos (* 6 pi i 0.002)) 2)))
+(define bird-2
+  (with-window (window -3 3 -1 1)
+  (for/draw ([i (in-range 1 2001 1)])
+    (curve (pt (* 3 (expt (sin (* pi i 0.001)) 3))
+               (- (cos (* pi i 0.004))))
            --
-           (pt (* 0.2 (sin (+ (* 6 pi i 0.002) (/ pi 5))))
-               (* (- (/ 2 3)) (expt (sin (- (* 2 pi i 0.002) (/ pi 3))) 2)))))))
+           (pt (* 1.5 (expt (sin (* pi i 0.001)) 3))
+               (* -0.5 (cos (* pi i (/ 6 2000)))))))))
 
-bird-1
+(scale 0.2 bird-2)
 
-(save-svg "bird-1.svg" bird-1)
+(save-svg "bird-2.svg" bird-2)
 
