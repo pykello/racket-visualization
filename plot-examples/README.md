@@ -5,7 +5,7 @@ Plot Examples
 
 Source code: [barnsley-fern.rkt](barnsley-fern.rkt)
 
-<img src="barnsley-fern.svg" alt="Barnsley Fern" />
+<img src="barnsley-fern.png" alt="Barnsley Fern" />
 
 
 

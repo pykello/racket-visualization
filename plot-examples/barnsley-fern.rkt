@@ -33,5 +33,5 @@
       #:x-min -3 #:x-max 3)
 
 (plot-file barnsley-fern
-           "barnsley-fern.svg"
+           "barnsley-fern.png"
            #:x-min -3 #:x-max 3)

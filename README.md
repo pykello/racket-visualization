@@ -20,4 +20,4 @@ Source code: [olive-branch.rkt](metapict-examples/mathematical-art/olive-branch.
 
 Source code: [barnsley-fern.rkt](plot-examples/barnsley-fern.rkt)
 
-<img src="plot-examples/barnsley-fern.svg" alt="Barnlsey Fern" />
+<img src="plot-examples/barnsley-fern.png" alt="Barnlsey Fern" />
