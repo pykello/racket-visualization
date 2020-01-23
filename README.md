@@ -15,3 +15,9 @@ Source code: [bird-2.rkt](metapict-examples/mathematical-art/bird-2.rkt)
 Source code: [olive-branch.rkt](metapict-examples/mathematical-art/olive-branch.rkt)
 
 <img src="metapict-examples/mathematical-art/olive-branch.svg" alt="Olive Branch" width="700" />
+
+### Barnsley Fern
+
+Source code: [barnsley-fern.rkt](plot-examples/barnsley-fern.rkt)
+
+<img src="plot-examples/barnsley-fern.svg" alt="Barnlsey Fern" />
