@@ -21,11 +21,11 @@
 (set-curve-pict-size 560 420)
 
 (define cafe-wall
-  (with-window (window 0 10 0 9)
+  (with-window (window 0 30 0 27)
     (draw
      (color "gray" (filldraw (rectangle (pt 0 0) (pt 100 100))))
-     (for*/draw ([row (in-range 9)]
-                [col (in-range 11)])
+     (for*/draw ([row (in-range 27)]
+                [col (in-range 33)])
        (let ([dx (delta-for-row row)]
              [c (color-for-cell row col)])
          (color c (filldraw (rectangle (pt (+ dx col) row) (pt (+ dx col 0.9) (+ row 0.9))))))))))
