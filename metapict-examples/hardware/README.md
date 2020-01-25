@@ -9,5 +9,10 @@ Source code: [cmos-nor.rkt](cmos-nor.rkt)
 
 ![CMOS NOR](cmos-nor.svg)
 
+### Single Stage Amplifier
+
+Source code: [amplifier.rkt](amplifier.rkt)
+
+![Single Stage Amplifier](single-stage-amplifier.svg)
 
 
