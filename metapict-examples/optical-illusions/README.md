@@ -5,7 +5,5 @@ Optical Illusions
 
 Source code: [cafe-wall.rkt](cafe-wall.rkt)
 
-<img src="cafe-wall.svg" alt="Cafe Wall" />
-
-
+<img src="cafe-wall.svg" alt="Cafe Wall" width="500"/>
 
