@@ -14,7 +14,7 @@
       ((current-label-margin))
       (current-label-margin)))
 
-(struct component (center w h pins label-f))
+(struct component (center w h pins label))
 
 (define (2-pin-w orientation thickness)
   (match orientation
@@ -72,13 +72,13 @@
                                     ['fixed (draw-fixed-capacitor c)]
                                     ['polarized (draw-polarized-capacitor c)])))
 
-(define (make-capacitor center orientation #:type (type 'fixed))
+(define (make-capacitor center orientation #:type (type 'fixed) #:label (label ""))
   (define thickness (capacitor-thickness))
   (capacitor center
              (2-pin-w orientation thickness)
              (2-pin-h orientation thickness)
              (2-pin-pins center orientation)
-             (2-pin-label-func center orientation thickness)
+             label
              orientation
              type))
 
@@ -86,6 +86,9 @@
   (define max-y (/ (capacitor-thickness) 2))
   (define min-y (- max-y))
   (define transform (2-pin-transform c (capacitor-orientation c)))
+  (define draw-label (2-pin-label-func (component-center c)
+                                       (capacitor-orientation c)
+                                       (capacitor-thickness)))
   (draw (transform (curve (pt -0.5 0) --
                           (pt -0.075 0) --
                           (pt -0.075 max-y) --
@@ -93,7 +96,8 @@
         (transform (curve (pt 0.5 0) --
                           (pt 0.075 0) --
                           (pt 0.075 max-y) --
-                          (pt 0.075 min-y)))))
+                          (pt 0.075 min-y)))
+        (draw-label (component-label c))))
 
 (define (draw-polarized-capacitor c)
   (define max-y (/ (capacitor-thickness) 2))
@@ -112,19 +116,22 @@
 (struct resistor component (orientation)
   #:property prop:drawable (λ (r) (draw-resistor r)))
 
-(define (make-resistor center orientation)
+(define (make-resistor center orientation #:label (label ""))
   (define thickness (resistor-thickness))
   (resistor center
             (2-pin-w orientation thickness)
             (2-pin-h orientation thickness)
             (2-pin-pins center orientation)
-            (2-pin-label-func center orientation thickness)
+            label
             orientation))
 
 (define (draw-resistor r)
   (define max-y (/ (resistor-thickness) 2))
   (define min-y (- max-y))
   (define transform (2-pin-transform r (resistor-orientation r)))
+  (define draw-label (2-pin-label-func (component-center r)
+                                       (resistor-orientation r)
+                                       (resistor-thickness)))
   (define base-curve (curve (pt -0.5 0) --
                             (pt -0.3 0) --
                             (pt -0.25 max-y) --
@@ -135,7 +142,8 @@
                             (pt 0.25 min-y) --
                             (pt 0.3 0) --
                             (pt 0.5 0)))
-  (draw (transform base-curve)))
+  (draw (transform base-curve)
+        (draw-label (component-label r))))
 
 (struct transistor component (type orientation flipped)
   #:property prop:drawable (λ (t) (draw-transistor t)))
@@ -151,37 +159,37 @@
                   (scaled (current-component-size)
                           (rotated θ (flip-if-necessary c))))))
 
-(define (make-transistor center [orientation 'right] [flipped #f] #:type [type 'npn])
+(define (make-transistor center [orientation 'right] [flipped #f] #:type [type 'npn] #:label [label ""])
   (let* ([transform (transistor-transform center orientation flipped)]
          [a (transform (pt -0.5 0))]
          [b (transform (pt@d 0.5 -60))]
          [c (transform (pt@d 0.5 60))]
-         [margin (+ (* (current-component-size) 0.5) (current-label-margin->num))]
          [pins (make-immutable-hash`([base . ,a]
                                      [emitter . ,b]
                                      [collector . ,c]
                                      [gate . ,a]
-                                     [source . ,b]
-                                     [drain . ,c]))]
-         [label-func (λ (t) (match orientation
-                              ['right (label-rt t (pt+ center (vec* margin right)))]
-                              ['left (label-lft t (pt+ center (vec* margin left)))]
-                              ['top (label-top t (pt+ center (vec* margin top)))]
-                              ['bottom (label-bot t (pt+ center (vec* margin down)))]))])
+                                     [source . ,b]))])
     (transistor center
                 (current-component-size)
                 (current-component-size)
                 pins
-                label-func
+                label
                 type
                 orientation
                 flipped)))
 
 (define (draw-transistor t)
-  (define transform (transistor-transform (component-center t)
+  (define center (component-center t))
+  (define transform (transistor-transform center
                                           (transistor-orientation t)
                                           (transistor-flipped t)))
   (define type (transistor-type t))
+  (define margin (+ (* (current-component-size) 0.5) (current-label-margin->num)))
+  (define draw-label (λ (t) (match (transistor-orientation t)
+                              ['right (label-rt t (pt+ center (vec* margin right)))]
+                              ['left (label-lft t (pt+ center (vec* margin left)))]
+                              ['top (label-top t (pt+ center (vec* margin top)))]
+                              ['bottom (label-bot t (pt+ center (vec* margin down)))])))
   (match type
     [(or 'npn 'pnp) (draw (transform (circle 0 0 0.5))
                           (transform (curve (pt -0.5 0) --
@@ -201,18 +209,23 @@
 (struct ground component ()
   #:property prop:drawable (λ (g) (draw-ground g)))
 
-(define (make-ground center)
+(define (make-ground center #:label (label ""))
   (define s (/ (current-component-size) 2))
   (ground center s s
           (make-immutable-hash `([in . ,(pt+ center (vec* s (vec 0 0.25)))]))
-          (λ (t)
-            (label-bot t (pt+ center (vec* s (vec 0 (- -0.25 (current-label-margin->num)))))))))
+          label))
 
 (define (draw-ground g)
   (define transform (2-pin-transform g 'right))
+  (define s (/ (current-component-size) 2))
+  (define center (component-center g))
+  (define draw-label
+    (λ (t)
+      (label-bot t (pt+ center (vec* s (vec 0 (- -0.25 (current-label-margin->num))))))))
   (draw (transform (curve (pt -0.16 0) -- (pt 0.16 0)))
         (transform (curve (pt -0.08 -0.1) -- (pt 0.08 -0.1)))
-        (transform (curve (pt -0.25 0.1) -- (pt 0.25 0.1)))))
+        (transform (curve (pt -0.25 0.1) -- (pt 0.25 0.1)))
+        (draw-label (component-label g))))
 
 
 (define (pin c tag)
@@ -231,5 +244,18 @@
      (curve p1 -/ p2)]
     [else (curve p1 /- p2)]))
 
-(define (label-for c t)
-  ((component-label-f c) t))
+(define (multiwire lst)
+  (define (out x)
+    (cond
+      [(component? x) (pin x 'out)]
+      [else x]))
+  (define (in x)
+    (cond
+      [(component? x) (pin x 'in)]
+      [else x]))
+  (define (aux lst acc)
+    (cond
+      [(< (length lst) 2) acc]
+      [else (aux (cdr lst)
+                 (cons (wire (out (car lst)) (in (cadr lst))) acc))]))
+  (aux lst `()))
