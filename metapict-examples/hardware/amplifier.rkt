@@ -28,9 +28,9 @@
 (define single-stage-amplifier
   (with-window (window 1 9 3 9)
     (draw r1 tr1 c1 r2 r3 r4 c2 ground
-          (filldraw (circle out 0.05))
-          (filldraw (circle in 0.05))
-          (filldraw (circle vcc 0.05))
+          (junction out)
+          (junction in)
+          (junction vcc)
           (wire (pin r1 'out) (pin tr1 'collector))
           (wire j1 (pin tr1 'emitter))
           (multiwire (list j1 c1 r2 j1))

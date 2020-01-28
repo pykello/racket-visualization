@@ -15,4 +15,9 @@ Source code: [amplifier.rkt](amplifier.rkt)
 
 ![Single Stage Amplifier](single-stage-amplifier.svg)
 
+### DRAM Cell
+
+Source code: [dram-cell.rkt](dram-cell.rkt)
+
+![DRAM Cell](dram-cell.svg)
 

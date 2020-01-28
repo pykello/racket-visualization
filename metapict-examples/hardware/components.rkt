@@ -56,7 +56,7 @@
   (* (current-component-size) 0.2))
 
 (define (capacitor-thickness)
-  (* (current-component-size) 0.3))
+  (* (current-component-size) 0.4))
 
 (define (2-pin-transform comp orientation)
   (define θ (match orientation
@@ -168,7 +168,8 @@
                                      [emitter . ,b]
                                      [collector . ,c]
                                      [gate . ,a]
-                                     [source . ,b]))])
+                                     [source . ,b]
+                                     [drain . ,c]))])
     (transistor center
                 (current-component-size)
                 (current-component-size)
@@ -185,26 +186,47 @@
                                           (transistor-flipped t)))
   (define type (transistor-type t))
   (define margin (+ (* (current-component-size) 0.5) (current-label-margin->num)))
-  (define draw-label (λ (t) (match (transistor-orientation t)
-                              ['right (label-rt t (pt+ center (vec* margin right)))]
-                              ['left (label-lft t (pt+ center (vec* margin left)))]
-                              ['top (label-top t (pt+ center (vec* margin top)))]
-                              ['bottom (label-bot t (pt+ center (vec* margin down)))])))
+  (define draw-label (λ (txt) (match (transistor-orientation t)
+                                ['right (label-rt txt (pt+ center (vec* margin right)))]
+                                ['left (label-lft txt (pt+ center (vec* margin left)))]
+                                ['up (label-top txt (pt+ center (vec* margin top)))]
+                                ['down (label-bot txt (pt+ center (vec* margin down)))])))
+  (define B (pt@d 0.5 60))
+  (define C (pt@d 0.5 -60))
+  (define dy (- (pt-y C) (pt-y B) -0.34))
   (match type
     [(or 'npn 'pnp) (draw (transform (circle 0 0 0.5))
                           (transform (curve (pt -0.5 0) --
                                             (pt -0.2 0) --
                                             (pt -0.2 0.25) --
                                             (pt -0.2 -0.25)))
-                          (transform (curve (pt -0.2 0.1) --
-                                            (pt@d 0.5 60)))
-                          (transform (curve (pt -0.2 -0.1) --
-                                            (pt@d 0.5 -60)))
+                          (transform (curve (pt -0.2 0.1) -- B))
+                          (transform (curve (pt -0.2 -0.1) -- C))
+                          (draw-label (component-label t))
                           (match type
                             ['npn (draw-arrow (transform (curve (pt -0.2 -0.1) --
-                                                                (med 0.7 (pt -0.2 -0.1) (pt@d 0.5 -60)))))]
+                                                                (med 0.7 (pt -0.2 -0.1) C))))]
                             ['pnp (draw-arrow (transform (curve (pt@d 0.5 -60) --
-                                                                (med 0.3 (pt -0.2 -0.1) (pt@d 0.5 -60)))))]))]))
+                                                                (med 0.3 (pt -0.2 -0.1) C))))]))]
+    [(or 'pmos 'nmos) (draw (transform (circle 0 0 0.5))
+                            (transform (curve B --++
+                                              (vec 0 -0.17) --++
+                                              (vec -0.4 0) --++
+                                              (vec 0 dy) --++
+                                              (vec 0.4 0) --++
+                                              (vec 0 -0.17)))
+                            (transform (curve (pt -0.15 0.35) --
+                                              (pt -0.15 -0.35)))
+                            (transform (curve (pt -0.25 0.25) --
+                                              (pt -0.25 -0.25)))
+                            (draw-label (component-label t))
+                            (match type
+                              ['pmos (draw
+                                      (transform (circle (pt -0.31 0) 0.05))
+                                      (transform (curve (pt -0.5 0) --
+                                                        (pt -0.36 0))))]
+                              ['nmos (transform (curve (pt -0.5 0) --
+                                                       (pt -0.25 0)))]))]))
 
 (struct ground component ()
   #:property prop:drawable (λ (g) (draw-ground g)))
@@ -259,3 +281,6 @@
       [else (aux (cdr lst)
                  (cons (wire (out (car lst)) (in (cadr lst))) acc))]))
   (aux lst `()))
+
+(define (junction p)
+  (filldraw (circle p 0.05)))
