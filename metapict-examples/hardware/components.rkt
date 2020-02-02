@@ -14,17 +14,7 @@
       ((current-label-margin))
       (current-label-margin)))
 
-(struct component (center w h pins label))
-
-(define (2-pin-w orientation thickness)
-  (match orientation
-    [(or 'left 'right) (current-component-size)]
-    [(or 'up 'down) (* thickness (current-component-size))]))
-
-(define (2-pin-h orientation thickness)
-  (match orientation
-    [(or 'up 'down) (current-component-size)]
-    [(or 'left 'right) (* thickness (current-component-size))]))
+(struct component (center pins label))
 
 (define (2-pin-pins center orientation)
   (define dx (/ (current-component-size) 2))
@@ -75,8 +65,6 @@
 (define (make-capacitor center orientation #:type (type 'fixed) #:label (label ""))
   (define thickness (capacitor-thickness))
   (capacitor center
-             (2-pin-w orientation thickness)
-             (2-pin-h orientation thickness)
              (2-pin-pins center orientation)
              label
              orientation
@@ -119,8 +107,6 @@
 (define (make-resistor center orientation #:label (label ""))
   (define thickness (resistor-thickness))
   (resistor center
-            (2-pin-w orientation thickness)
-            (2-pin-h orientation thickness)
             (2-pin-pins center orientation)
             label
             orientation))
@@ -171,8 +157,6 @@
                                      [source . ,b]
                                      [drain . ,c]))])
     (transistor center
-                (current-component-size)
-                (current-component-size)
                 pins
                 label
                 type
@@ -233,7 +217,7 @@
 
 (define (make-ground center #:label (label ""))
   (define s (/ (current-component-size) 2))
-  (ground center s s
+  (ground center
           (make-immutable-hash `([in . ,(pt+ center (vec* s (vec 0 0.25)))]))
           label))
 
