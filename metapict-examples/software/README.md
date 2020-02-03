@@ -5,5 +5,5 @@ Software Diagram Examples
 
 Source code: [memory-layout.rkt](memory-layout.rkt)
 
-![Memory Layout](memory-layout.svg)
+<img src="memory-layout.svg" alt="Memory Layout" width="500"/>
 

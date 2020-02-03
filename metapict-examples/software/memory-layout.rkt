@@ -26,26 +26,26 @@
            `())
        )
       ))
-  (with-window (window 63 -1 -5 5)
-    (draw-rec
-     (for/fold ([x0 0]
-                [acc (list (label-top "0" (pt 0 3))
-                           (curve (pt 0 0) -- (pt 0 3)))]
-                #:result acc)
-               ([v items])
-       (values (+ x0 (car v))
-               (cons (draw-item v x0)
-                     acc))))))
+  (draw-rec
+   (for/fold ([x0 0]
+              [acc (list (label-top "0" (pt 0 3))
+                         (curve (pt 0 0) -- (pt 0 3)))]
+              #:result acc)
+             ([v items])
+     (values (+ x0 (car v))
+             (cons (draw-item v x0)
+                   acc)))))
 
 (set-curve-pict-size 640 100)
 (define mem-layout
-  (font-size 10
-             (memory-layout `((12 "LightBlue" "A")
-                              (9 "Moccasin" "B")
-                              (9 "LightPink" "C")
-                              (9 "Khaki" "D")
-                              (9 "PaleGreen" "E")
-                              (14 "white" #f)))))
+  (with-window (window 63 -1 -5 5)
+    (font-size 10
+               (memory-layout `((12 "LightBlue" "A")
+                                (9 "Moccasin" "B")
+                                (9 "LightPink" "C")
+                                (9 "Khaki" "D")
+                                (9 "PaleGreen" "E")
+                                (14 "white" #f))))))
 
 mem-layout
 
