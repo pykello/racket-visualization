@@ -4,12 +4,12 @@
          "../metapict-examples/common.rkt")
 
 (define w 500)
+(define theta (atan (/ 1. 4)))
 
 (define (rotating-squares-pict n)
   (cond
     [(= n 1) (rectangle w w)]
     [else (define subproblem (rotating-squares-pict (- n 1)))
-          (define theta (atan (/ 1. 4)))
           (define rotated-subproblem
             (scale-to-fit (rotate subproblem theta) w w))
           (cc-superimpose (rectangle w w)
@@ -73,7 +73,7 @@
   (define start_1 (rotating-squares-pict n))
   (define seq_1 (rotate-pict-seq start_1
                                  0
-                                 0.4
+                                 theta
                                  15))
 
   (define start_2 (last seq_1))
