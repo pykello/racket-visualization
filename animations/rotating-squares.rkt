@@ -9,7 +9,8 @@
                   rs-append
                   rs-append*
                   rs-write)
-         "../metapict-examples/common.rkt")
+         "common.rkt"
+         future-visualizer)
 
 (define w 500)
 (define theta (atan (/ 1. 4)))
@@ -55,27 +56,6 @@
              [p2 seq2])
     (vc-append p1 p2)))
 
-(define (output-frames seq prefix)
-  (for ([i (in-range 0 (length seq))]
-        [p seq])
-    (define num (~a i #:width 6 #:pad-string "0" #:align 'right))
-    (define name (string-append prefix num ".png"))
-    (displayln (format "outputting ~a (total=~a) ..." name (length seq)))
-    (save-png name p)))
-
-(define (create-animation seq output-filename framerate)
-  (system "rm /tmp/frame-*.png")
-  (define frames (first seq))
-  (define sounds (second seq))
-  (output-frames frames "/tmp/frame-")
-  (define audio-combined (rs-append* sounds))
-  (define audio-filename "/tmp/racket-audio.wav")
-  (rs-write audio-combined audio-filename)
-  (define command
-    (format "ffmpeg -y -framerate ~a -i /tmp/frame-%06d.png -i ~a ~a" framerate audio-filename output-filename))
-  (displayln command)
-  (system command))
-
 ;;
 ;; creates frames for transforming n squares to n+1 squares
 ;;
@@ -112,7 +92,7 @@
              [all `()]
              [fps-real fps]
              [sounds `()]
-             #:result (list all sounds))
+             #:result (values all sounds))
             ([i (in-range 1 n)])
     (define fps2 (ceiling fps-real))
     (define slides (rotating-squares-anim start_1 i fps2 pause))
@@ -130,8 +110,5 @@
     (values next-start (append all layedout) new-fps-real
             (append sounds (list sound)))))
              
-
-;;(create-animation (anim) "rotating-squares.mp4" fps)
-;;(create-animation (anim #f 50) "rotating-squares-fast.mp4" fps)
-;;(create-animation (anim 24 #f 50 1.03) "rotating-squares-accelerated.mp4" fps)
-(create-animation (anim 24 #f 50 1.045) "rotating-squares-super-accelerated-with-audio.mp4" fps)
+(define-values (frame-seq audio-seq) (anim 24 #f 50 1.045))
+(create-animation frame-seq audio-seq "rotating-squares-super-accelerated-with-audio.mp4" fps)
