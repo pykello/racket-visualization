@@ -44,7 +44,7 @@
      (define t (max 0.0 (/ (- to current-time) fade-duration)))
      (fade-pict (fast-end t) b p)]
     [(<= from current-time to) p]
-    [else b]))
+    [else b]) )
 
 (define (generate-frames generate-frame len fps)
   (define frame-count (ceiling (* len fps)))
