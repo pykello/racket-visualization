@@ -4,11 +4,7 @@
          pict
          racket/draw
          racket/dict
-         racket/match
-         (only-in metapict
-                  bez
-                  pt
-                  bez->dc-path))
+         racket/match)
 
 (define (draw-svg root)
   (define width (parse-dimension (get-attr root 'width "100px")))
@@ -50,6 +46,7 @@
 (define (draw-svg-elem dc elem)
   (define brush (send dc get-brush))
   (define pen (send dc get-pen))
+  (define transformation (send dc get-transformation))
 
   (define elem-fill (get-attr elem 'fill #f))
   (when (string? elem-fill)
@@ -59,6 +56,10 @@
   (define style (get-attr elem 'style #f))
   (when (string? style)
     (apply-style dc style))
+
+  (define transform (get-attr elem 'transform #f))
+  (when (string? transform)
+    (apply-transform dc transform))
 
   (define tag (first elem))
   (match tag
@@ -79,7 +80,8 @@
     [_ 0])
 
   (send dc set-brush brush)
-  (send dc set-pen pen))
+  (send dc set-pen pen)
+  (send dc set-transformation transformation))
 
 (define (svg-path->dc-path path d cx cy [prev ""])
 
@@ -127,7 +129,7 @@
      (add-curve-delta dx1 dy1 dx2 dy2 dx dy rest)]
 
     [(list (? number? dx1) dy1 dx2 dy2 dx dy rest ...)
-     #:when (eq? prev "C")
+     #:when (eq? prev "c")
      (add-curve-delta dx1 dy1 dx2 dy2 dx dy rest)]
 
     [(list "z" rest ...)
@@ -145,19 +147,38 @@
   (define b (string-replace a "," " "))
   (define c (regexp-replace* #rx"([a-zA-Z])" b " \\1 "))
   (define tokens (string-split c))
-  (define result
-    (map (λ (token)
-           (if (regexp-match? #rx"[0-9]" token)
-               (string->number token)
-               token))
-         tokens))
-  result)
+  (num-tokens->numbers tokens))
+
+(define (num-tokens->numbers tokens)
+  (map (λ (token)
+         (if (regexp-match? #rx"[0-9]" token)
+             (string->number token)
+             token))
+       tokens))
 
 (define (apply-style dc s)
   (define fill (get-value s "fill" #f))
   (when (string? fill)
     (define color (string->color fill))
     (send dc set-brush color 'solid)))
+
+(define (apply-transform dc s)
+  (define (recurse tokens)
+    (match tokens
+      [(list "matrix" a b c d e f rest ...)
+       (send dc transform (vector a b c d e f))
+       (recurse rest)]
+      [(list "scale" (? number? x) (? number? y))
+       (send dc scale x y)]
+      [(list "scale" (? number? x))
+       (send dc scale x x)]
+      [`() 0]))
+  (recurse (tokenize-transform s)))
+
+(define (tokenize-transform s)
+  (define a (regexp-replace* #rx"[(),]" s " "))
+  (define tokens (string-split a))
+  (num-tokens->numbers tokens))
 
 (define (get-value s key default)
   (define a (regexp-replace* #rx"[:;]" s " "))
