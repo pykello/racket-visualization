@@ -168,10 +168,18 @@
       [(list "matrix" a b c d e f rest ...)
        (send dc transform (vector a b c d e f))
        (recurse rest)]
-      [(list "scale" (? number? x) (? number? y))
-       (send dc scale x y)]
-      [(list "scale" (? number? x))
-       (send dc scale x x)]
+      [(list "scale" (? number? x) (? number? y) rest ...)
+       (send dc scale x y)
+       (recurse rest)]
+      [(list "scale" (? number? x) rest ...)
+       (send dc scale x x)
+       (recurse rest)]
+      [(list "transform" (? number? x) (? number? y) rest ...)
+       (send dc translate x y)
+       (recurse rest)]
+      [(list "transform" (? number? x) rest ...)
+       (send dc translate x 0)
+       (recurse rest)]
       [`() 0]))
   (recurse (tokenize-transform s)))
 
