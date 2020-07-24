@@ -47,6 +47,7 @@
   (define brush (send dc get-brush))
   (define pen (send dc get-pen))
   (define transformation (send dc get-transformation))
+  (define font (send dc get-font))
 
   (define elem-fill (get-attr elem 'fill #f))
   (when (string? elem-fill)
@@ -77,11 +78,24 @@
        (when (list? e)
          (draw-svg-elem dc e)))]
 
+    ['text
+     (for ([e (drop elem 2)])
+       (when (list? e)
+         (draw-svg-elem dc e)))]
+
+    ['tspan
+     (let* ([x (string->number (get-attr elem 'x "0"))]
+            [y (string->number (get-attr elem 'y "0"))])
+       (for ([e (drop elem 2)])
+         (when (string? e)
+           (send dc draw-text e x y))))]
+
     [_ 0])
 
   (send dc set-brush brush)
   (send dc set-pen pen)
-  (send dc set-transformation transformation))
+  (send dc set-transformation transformation)
+  (send dc set-font font))
 
 (define (svg-path->dc-path path d cx cy [prev ""])
 
@@ -157,10 +171,23 @@
        tokens))
 
 (define (apply-style dc s)
+
+  ;; fill
   (define fill (get-value s "fill" #f))
   (when (string? fill)
     (define color (string->color fill))
-    (send dc set-brush color 'solid)))
+    (send dc set-brush color 'solid))
+
+  ;; font
+  (let* ([current-font (send dc get-font)]
+         [size (get-value-number s "font-size"
+                                  (send current-font get-size))]
+         [face (get-value s "font-family"
+                           (send current-font get-face))]
+         [face2 "TeX Gyre Pagella, Normal"]
+         [family (send current-font get-family)])
+    (define font (make-object font% size face2 'system))
+    (send dc set-font font)))
 
 (define (apply-transform dc s)
   (define (recurse tokens)
@@ -174,10 +201,10 @@
       [(list "scale" (? number? x) rest ...)
        (send dc scale x x)
        (recurse rest)]
-      [(list "transform" (? number? x) (? number? y) rest ...)
+      [(list "translate" (? number? x) (? number? y) rest ...)
        (send dc translate x y)
        (recurse rest)]
-      [(list "transform" (? number? x) rest ...)
+      [(list "translate" (? number? x) rest ...)
        (send dc translate x 0)
        (recurse rest)]
       [`() 0]))
@@ -197,6 +224,11 @@
       [(equal? (first rem) key) (second rem)]
       [else (worker (cddr rem))]))
   (worker tokens))
+
+(define (get-value-number s key default)
+  (define a (get-value s key (number->string default)))
+  (define b (regexp-replace* #rx"[a-zA-Z]" a ""))
+  (string->number b))
 
 (define (string->color s)
   (define r (substring s 1 3))
