@@ -10,10 +10,7 @@
   (define width (parse-dimension (get-attr root 'width "100px")))
   (define height (parse-dimension (get-attr root 'height "100px")))
   (dc (λ (dc dx dy)
-        ;; save dc state
-        (define smoothing (send dc get-smoothing))
-        (define transformation (send dc get-transformation))
-        (define pen (send dc get-pen))
+        (define state (save-state dc))
 
         (define-values
           (xx xy yx yy x0 y0)
@@ -37,30 +34,12 @@
           (when (list? elem)
             (draw-svg-elem dc elem)))
 
-        ;; restore dc state
-        (send dc set-transformation transformation)
-        (send dc set-smoothing smoothing)
-        (send dc set-pen pen))
+        (restore-state dc state))
       width height))
 
 (define (draw-svg-elem dc elem)
-  (define brush (send dc get-brush))
-  (define pen (send dc get-pen))
-  (define transformation (send dc get-transformation))
-  (define font (send dc get-font))
-
-  (define elem-fill (get-attr elem 'fill #f))
-  (when (string? elem-fill)
-    (define color (string->color elem-fill))
-    (send dc set-brush color 'solid))
-
-  (define style (get-attr elem 'style #f))
-  (when (string? style)
-    (apply-style dc style))
-
-  (define transform (get-attr elem 'transform #f))
-  (when (string? transform)
-    (apply-transform dc transform))
+  (define state (save-state dc))
+  (apply-common-attributes dc elem)
 
   (define tag (first elem))
   (match tag
@@ -79,24 +58,15 @@
          (draw-svg-elem dc e)))]
 
     ['text
-     (for ([e (drop elem 2)])
-       (when (list? e)
-         (draw-svg-elem dc e)))]
-
-    ['tspan
-     (let* ([x (string->number (get-attr elem 'x "0"))]
-            [y (string->number (get-attr elem 'y "0"))])
-       (for ([e (drop elem 2)])
-         (when (string? e)
-           (send dc draw-text e x y))))]
+     (render-text-elem dc elem)]
 
     [_ 0])
 
-  (send dc set-brush brush)
-  (send dc set-pen pen)
-  (send dc set-transformation transformation)
-  (send dc set-font font))
+  (restore-state dc state))
 
+;;
+;; svg-path->dc-path
+;;
 (define (svg-path->dc-path path d cx cy [prev ""])
 
   (define (add-curve x1 y1 x2 y2 x y rest)
@@ -150,11 +120,43 @@
      (send path close)
      path]))
 
+;;
+;; render-text-elem
+;;
+(define (render-text-elem dc elem [x 0] [y 0])
+  (define elem-x (get-attr-number elem 'x x))
+  (define elem-y (get-attr-number elem 'y y))
+
+  (define next-x
+    (for/fold ([cur-x elem-x])
+              ([e (drop elem 2)])
+      (cond
+        [(and (list? e)
+              (eq? (first e) 'tspan))
+         (render-text-elem dc e cur-x elem-y)]
+        [(string? e)
+         (draw-text dc e cur-x elem-y)]
+        [else
+         (error "unexpected element inside <text>" e)])))
+  next-x)
+
+;;
+;; draw-text
+;;
+(define (draw-text dc s x y)
+  (define-values (w h c d)
+    (send dc get-text-extent s))
+  (send dc draw-text s x (+ (- y h) c))
+  (+ x w))
+
 (define (get-attr elem name default)
   (define attrs (second elem))
   (match (findf (λ(a) (equal? (first a) name)) attrs)
     [(list key value) value]
     [_ default]))
+
+(define (get-attr-number elem name default)
+  (string->number (get-attr elem name (number->string default))))
 
 (define (tokenize-path s)
   (define a (string-replace s "-" " -"))
@@ -170,6 +172,26 @@
              token))
        tokens))
 
+;;
+;; apply-common-attributes
+;;
+(define (apply-common-attributes dc elem)
+  (define elem-fill (get-attr elem 'fill #f))
+  (when (string? elem-fill)
+    (define color (string->color elem-fill))
+    (send dc set-brush color 'solid))
+
+  (define style (get-attr elem 'style #f))
+  (when (string? style)
+    (apply-style dc style))
+
+  (define transform (get-attr elem 'transform #f))
+  (when (string? transform)
+    (apply-transform dc transform)))
+
+;;
+;; apply-style
+;;
 (define (apply-style dc s)
 
   ;; fill
@@ -189,6 +211,9 @@
     (define font (make-object font% size face2 'system))
     (send dc set-font font)))
 
+;;
+;; apply-transform
+;;
 (define (apply-transform dc s)
   (define (recurse tokens)
     (match tokens
@@ -238,6 +263,20 @@
     (string->number r 16)
     (string->number g 16)
     (string->number b 16)))
+
+(define (save-state dc)
+  (list (send dc get-brush)
+        (send dc get-pen)
+        (send dc get-transformation)
+        (send dc get-font)
+        (send dc get-smoothing)))
+
+(define (restore-state dc st)
+  (send dc set-brush (first st))
+  (send dc set-pen (second st))
+  (send dc set-transformation (third st))
+  (send dc set-font (fourth st))
+  (send dc set-smoothing (fifth st)))
 
 (define (parse-dimension s)
   (string->number (string-replace s "px" "")))
