@@ -201,14 +201,19 @@
     (send dc set-brush color 'solid))
 
   ;; font
+  ;; svg specs 1.1, p 245. (10.10. Font selection properties)
   (let* ([current-font (send dc get-font)]
+         [size-attr (get-value s "font-size" "")]
+         [size-in-pixels? (string-contains? size-attr "px")]
          [size (get-value-number s "font-size"
-                                  (send current-font get-size))]
+                                 (send current-font get-size))]
+         [weight (parse-font-weight (get-value s "font-weight"
+                                               (send current-font get-weight)))]
+         [style (parse-font-style (get-value s "font-style"
+                                             (send current-font get-style)))]
          [face (get-value s "font-family"
-                           (send current-font get-face))]
-         [face2 "TeX Gyre Pagella, Normal"]
-         [family (send current-font get-family)])
-    (define font (make-object font% size face2 'system))
+                           (send current-font get-face))])
+    (define font (make-object font% size face 'system style weight #f 'default size-in-pixels?))
     (send dc set-font font)))
 
 ;;
@@ -240,9 +245,22 @@
   (define tokens (string-split a))
   (num-tokens->numbers tokens))
 
+(define (tokenize-kv-list s)
+  (for/fold ([tokens `()]
+             [in-quote? #f]
+             [token `()]
+             #:result (reverse tokens))
+            ([c (string-append s " ")])
+    (cond
+      [(eq? c #\') (values tokens (not in-quote?) token)]
+      [(and (not in-quote?)
+            (member c `(#\space #\newline #\tab #\: #\;)))
+       (define new-token (apply string (reverse token)))
+       (values (cons new-token tokens) #f `())]
+      [else (values tokens in-quote? (cons c token))])))
+
 (define (get-value s key default)
-  (define a (regexp-replace* #rx"[:;]" s " "))
-  (define tokens (string-split a))
+  (define tokens (tokenize-kv-list s))
   (define (worker rem)
     (cond
       [(< (length rem) 2) default]
@@ -280,6 +298,24 @@
 
 (define (parse-dimension s)
   (string->number (string-replace s "px" "")))
+
+(define (parse-font-weight w)
+  (match w
+    ["normal" 'normal]
+    ["bold" 'bold]
+    ["bolder" 'heavy]
+    ["lighter" 'ultralight]
+    [(? number? x) x]
+    [(? symbol? x) x]
+    [_ (string->number w)]))
+
+(define (parse-font-style s)
+  (match s
+    ["normal" 'normal]
+    ["italic" 'italic]
+    ["oblique" 'slant]
+    [(? symbol? x) x]
+    [else (error (format "uknown font-style ~a s"))]))
 
 (define racket-logo-text (string->xexpr (port->string (open-input-file "idris-logo.svg"))))
 (draw-svg racket-logo-text)
