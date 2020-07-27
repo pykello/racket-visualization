@@ -2,6 +2,7 @@
 
 (require xml
          pict
+         pict/shadow
          racket/draw
          racket/dict
          racket/match)
@@ -101,17 +102,33 @@
           (send c blue)
           (send c alpha)))
 
-(define alpha 0.5)
+(define (idris-shadow p)
+  (define ff current-inexact-milliseconds)
+  (define s (ff))
+  (define flood (feFlood (make-object color% 0 0 0 1) 0.5 200 200))
+  (displayln (- (ff) s))
+  (define c1 (feComposite 'in flood p))
+  (displayln (- (ff) s))
+  (define b (blur c1 3))
+  (displayln (- (ff) s))
+  (define o (feOffset b 6 6))
+  (displayln (- (ff) s))
+  (define c2 (feComposite 'over p o))
+  (displayln (- (ff) s))
+  c2)
+
+(define alpha 1)
 (define w 30)
 (define shift (/ w 2))
 
 (define (test)
   (define r1 (filled-rectangle w w #:draw-border? #f #:color (make-object color% 0 255 0 alpha)))
-  (define r2 (feOffset (filled-rectangle w w #:draw-border? #f #:color (make-object color% 255 0 0 alpha)) shift 0))
-  r1
-  r2
-  (feComposite 'in r1 r2)
-  (feComposite 'over r1 r2))
+  ;(define r2 (feOffset (filled-rectangle w w #:draw-border? #f #:color (make-object color% 255 0 0 alpha)) shift 0))
+  ;r1
+  ;r2
+  ;(feComposite 'in r1 r2)
+  ;(feComposite 'over r1 r2)
+  (idris-shadow r1))
 
-;;(test)
+(test)
 
