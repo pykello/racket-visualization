@@ -7,6 +7,7 @@
          racket/dict
          racket/match)
 
+(provides (all-defined-out))
 
 (define (feFlood color opacity w h)
   (define color-with-alpha
@@ -43,22 +44,24 @@
   (define bmp2 (send (pict->bitmap p2) make-dc))
   (define result-bmp (make-object bitmap% w h #f #t))
   (define bmp-dc (send result-bmp make-dc))
-  
-  (for* ([x (in-range w)]
-         [y (in-range h)])
-    (let* ([c1 (make-object color%)]
-           [c2 (make-object color%)]
-           [r1 (send bmp1 get-pixel x y c1)]
-           [r2 (send bmp2 get-pixel x y c2)]
-           [c1-exists? (and (< x w1) (< y h1))]
-           [c2-exists? (and (< x w2) (< y w2))]
-           [rc1 (if c1-exists? c1 (make-object color% 0 0 0 0))]
-           [rc2 (if c2-exists? c2 (make-object color% 0 0 0 0))])
-      ;;(displayln (format "x=~a, y=~a, c1=~a, c2=~a" x y (color->string rc1) (color->string rc2)))
-      (define c (composite-color operator rc1 rc2))
-      ;;(displayln (format "compose=~a" (color->string c)))
-      (send bmp-dc set-pixel x y c)
-      ))
+
+  (define pixels
+    (flatten
+     (for*/list ([x (in-range w)]
+                 [y (in-range h)])
+       (let* ([c1 (make-object color%)]
+              [c2 (make-object color%)]
+              [r1 (send bmp1 get-pixel x y c1)]
+              [r2 (send bmp2 get-pixel x y c2)]
+              [c1-exists? (and (< x w1) (< y h1))]
+              [c2-exists? (and (< x w2) (< y w2))]
+              [rc1 (if c1-exists? c1 (make-object color% 0 0 0 0))]
+              [rc2 (if c2-exists? c2 (make-object color% 0 0 0 0))])
+         (define c (composite-color operator rc1 rc2))
+         (color->bytes c)))))
+
+  (define pixel-bytes (apply bytes pixels))
+  (send bmp-dc set-argb-pixels	0 0 w h pixel-bytes)
 
   (dc (λ (dc x y)
         (define-values (sx sy) (send dc get-scale))
@@ -66,6 +69,12 @@
         (send dc draw-bitmap result-bmp (* x sx) (* y sy))
         (send dc set-scale sx sy))
       w h))
+
+(define (color->bytes c)
+  (list (exact-round (* 255 (send c alpha)))
+        (send c red)
+        (send c green)
+        (send c blue)))
 
 (define (composite-color operator c1 c2)
   (define (over-alpha a1 a2)
