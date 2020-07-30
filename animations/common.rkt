@@ -13,13 +13,14 @@
   (for/async ([i (in-range 0 (length seq))]
               [p seq])
     (define num (~a i #:width 6 #:pad-string "0" #:align 'right))
-    (define name (string-append prefix num ".png"))
+    (define name (string-append prefix num ".bmp"))
     (displayln (format "outputting ~a (total=~a) ..." name (length seq)))
-    (save-png name p)))
+    (save-bmp name p)))
 
 
 (define (create-animation frame-seq audio-seq output-filename framerate)
-  (system "rm /tmp/frame-*.png")
+  (system "rm -rf /tmp/frame-*.png")
+  (system "rm -rf /tmp/frame-*.bmp")
   (output-frames frame-seq "/tmp/frame-")
   (define audio-combined (if (null? audio-seq)
                                     (silence 1000)
@@ -27,7 +28,7 @@
   (define audio-filename "/tmp/racket-audio.wav")
   (rs-write audio-combined audio-filename)
   (define command
-    (format "ffmpeg -y -framerate ~a -i /tmp/frame-%06d.png -i ~a ~a" framerate audio-filename output-filename))
+    (format "ffmpeg -y -framerate ~a -i /tmp/frame-%06d.bmp -i ~a -vcodec libx264  -pix_fmt yuv420p ~a" framerate audio-filename output-filename))
   (displayln command)
   (system command))
 

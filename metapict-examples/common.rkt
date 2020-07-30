@@ -43,6 +43,11 @@ latex
     (delete-file filename))
   (save-pict filename p 'png))
 
+(define (save-bmp filename p)
+  (when (file-exists? filename)
+    (delete-file filename))
+  (save-pict filename p 'bmp))
+
 (define (draw-rec cs)
   (if (list? cs)
       (draw* (map draw-rec cs))
