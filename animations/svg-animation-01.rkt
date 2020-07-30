@@ -8,23 +8,22 @@
 
 (define (svg-animate time svg-in anims)
   (define txs
-    (first
-     (flatten
-      (for/list ([element-anim anims])
-        (element-anim->tx time element-anim)))))
+    (make-hash
+     (for/list ([element-anim anims])
+       (element-anim->tx time element-anim))))
   (transform-svg svg-in txs))
 
 (define (element-anim->tx time element-anim)
   (define element-name (car element-anim))
   (define property-anims (cdr element-anim))
-  (flatten
+  (cons element-name
    (for/list ([property-anim property-anims])
-     (property-anim->tx time element-name property-anim))))
+     (property-anim->tx time property-anim))))
 
-(define (property-anim->tx time element-name property-anim)
+(define (property-anim->tx time property-anim)
   (define property-defaults
     '([opacity 1.0]
-      [transform []]))
+      [translate (0 0)]))
 
   (define property (car property-anim))
   (define keyframes
@@ -45,12 +44,22 @@
   (define value-a (cdr keyframe-a))
   (define value-b (cdr keyframe-b))
 
-  (define t (/ (- time time-a) (- time-b time-a)))
-  (define property-value (* 1.0 (+ value-a (* t (- value-b value-a)))))
+  (define t (fast-start (/ (- time time-a) (- time-b time-a))))
 
-  (make-hash
-   (list
-    (cons element-name (list (cons property property-value))))))
+  (define (interpolate t a b)
+    (cond
+      [(number? a)  (* 1.0 (+ a (* t (- b a))))]
+      [(list? a) (for/list ([sub-a a]
+                            [sub-b b])
+                   (interpolate t sub-a sub-b))]))
+  (define property-value (interpolate t value-a value-b))
+  (define result
+    (match property
+      ['opacity (cons property property-value)]
+      ['translate (cons 'transform (list (list 'translate
+                                               (* 1.0 (first property-value))
+                                               (* 1.0 (second property-value)))))]))
+  result)
 
 (define (find-interval keyframes time)
   (define a (first keyframes))
@@ -64,14 +73,14 @@
   (define svg-in (open-input-file "tree.svg"))
 
   (define level2-anim
-    `([opacity . {(0 . 0) (1 . 0) (2 . 1) (3 . 1) (4 . 0)}]))
+    '([opacity . {(0 . 0) (1 . 0) (2 . 1) (3 . 1) (4 . 0)}]
+      [translate . {(0 . [-100 0]) (5 . [100 0])}]))
 
   (define svg-out
     (svg-animate time svg-in
                  (list (cons "level2" level2-anim))))
 
-  (define p (svg-port->pict svg-out))
-  p)
+  (svg-port->pict svg-out))
 
 (define fps 24)
 (define frames (generate-frames generate-frame 5 fps))
